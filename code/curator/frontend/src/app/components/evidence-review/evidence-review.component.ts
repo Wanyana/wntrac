@@ -165,6 +165,36 @@ export class EvidenceReviewComponent implements OnInit {
     });
   }
 
+  //get fuzzy match
+  getfuzzy(filters?: any): void {
+    this.loading = true;
+
+    // To prepare dropdown of event types
+    this.getEventTypes();
+
+    this.updateServerFetchRequestParams();
+
+    this.apiService.fuzzymatch(this.fetchRequestParams, filters).then((evidences: any) => {
+      const evidencesKey = 'evidences';
+      // console.group('BaseComponent while fetching evidences');
+      // console.log(...evidences[evidencesKey]);
+      // console.groupEnd();
+      this.evidences.push(...evidences[evidencesKey]);
+      this.determineEvidenceSiblings();
+      this.numberOfEvidences = this.evidences.length;
+      this.loading = false;
+      this.updateEvidencesList({});
+    }).catch((error: Error) => {
+      this.loading = false;
+      this.uncategorizedFailed = true;
+      // some handling for failed call
+      console.group('BaseComponent while fetching evidences');
+      console.log('Error getting evidences');
+      console.log(error.stack);
+      console.groupEnd();
+    });
+  }
+
   determineEvidenceSiblings() {
     const evenIdKey = 'even_id';
     const eventIds = this.evidences.map(evidence => evidence[evenIdKey]);
@@ -215,6 +245,32 @@ export class EvidenceReviewComponent implements OnInit {
     }
     console.log(filters);
     this.getEvidences(filters);
+  }
+  //filter fuzzy evidences
+
+  filterfuzzy(append?: boolean): void {
+    console.log('filter fuzzy evidences');
+    if (!append) {
+      this.evidences = [];
+      this.pageIndex = 0;
+    }
+    const filters = this.evidenceFilterForm.value;
+    if (filters.country !== '' && filters.date !== '' && filters.restriction !== '' && filters.type !== ''
+      && filters.value !== '') {
+      this.formIsComplete = true;
+      this.newEvidence = {
+        country: filters.country,
+        date: filters.date,
+        type: filters.type,
+        value: filters.value,
+        restriction: filters.restriction
+      }
+    } else {
+      this.formIsComplete = false;
+      this.newEvidence = {};
+    }
+    console.log(filters);
+    this.getfuzzy(filters);
   }
 
   updateEventValue() {

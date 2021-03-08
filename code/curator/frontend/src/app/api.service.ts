@@ -386,6 +386,35 @@ export class ApiService {
     return date;
   }
 
+  fuzzymatch(fetchRequestParams, filters?: any): Promise<any> {
+
+    const limit = fetchRequestParams.limit;
+    const offset = fetchRequestParams.offset;
+    let path = this.dataUrl + 'evidence?sessionKey=' + this.sessionKey + '&limit=' + limit + '&offset=' + offset + '&';
+    // let path = this.dataUrl + 'evidence?sessionKey=' + this.sessionKey + '&limit=50&';
+    for (const filter in filters) {
+      if (!((filters[filter] === null) || (filters[filter] === '') || (filters[filter] === '-'))) {
+
+        if (filter === 'date') {
+          filters[filter] = this.fixDate(filters[filter]);
+        }
+        console.log(filter, filters[filter]);
+        path += filter + '=' + filters[filter] + '&';
+      }
+    }
+
+    return this.http.get(path)
+      .toPromise()
+      .then((evidences: Array<object>) => {
+        // console.log('in api.service getEvidence', evidences);
+        return evidences;
+      })
+      .catch((error: Error) => {
+        return Promise.reject(this.makeErrorMessage(error, 'apiService(fuzzymatch)'));
+      });
+
+  }
+
   insertEvidence(formData): Promise<any> {
     formData.sessionKey = this.sessionKey;
     const httpOptions = {

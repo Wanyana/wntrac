@@ -88,8 +88,15 @@
       </button>
       <button mat-icon-button (click)="resetFilters()" aria-label="Reset Filter">
         <mat-icon>autorenew</mat-icon>
-      </button>
+      </button>  
     </div>
+    <div>
+    <button mat-icon-button (click)="filterfuzzy(false)" aria-label="Apply Filter">
+      <mat-icon>search</mat-icon>Get Fuzzy Results
+    </button><
+
+
+
   </div>
   <h4 *ngIf="evidences.length > 0; else noSearchResult">Results</h4>
   <div #searchResultsContainer class="search-results-container">

@@ -20,6 +20,7 @@ from flasgger import Swagger
 import os
 from utils import *
 import uuid
+from datetime import timedelta
 
 from config import *
 
@@ -441,8 +442,68 @@ def CandidateEvidence(filter_dict=dict(),limit=50,offset=0):
                                                      }]
 
         return jsonify(ce_with_document) , 200
+#Get fuzzy match
+@app.route('/fuzzymatch', methods=['GET'])
+def fuzzy_match():
+    arg_dict = {x[0]: x[1][0] for x in list(request.args.lists())}
+
+    # Check whether an event already exists
+    event_composite_keys = ['country', 'date', 'restriction', 'type', 'value']
+
+    event_data = {}
+    evidence_data = {}
+    
 
 
+    for key in event_composite_keys:
+        event_data[key] = arg_dict.get(key)
+
+    matched_event = get_event(   event_data['type'], \
+                                                    event_data['country'], \
+                                                    event_data['date'], \
+                                                    event_data['value'], \
+                                                    event_data['restriction'], \
+                                                    get_evidences = False     # Not implemented
+                                                    
+                                                )
+
+    # If event id needs to be updated, then create new event or reuse previously created event
+    if len(matched_event) > 0:
+
+      
+         startdate = event_data['date'] + timedelta(days=11)
+         enddate = event_data['date'] - timedelta(days=11)
+
+        filter_dict = dict()
+        if 'id' in arg_dict.keys():
+            filter_dict['id'] = arg_dict['id']
+
+
+        # eg. /evidence?restriction=1&country=USA-MA&type=school%20closure&value=Universities%20closed
+        filtering_keys = ['country','type']
+        for filter in arg_dict.keys():
+            if filter in filtering_keys:
+                filter_dict[filter] = arg_dict[filter]
+
+ result = get_table_data('evidence',
+                                filter_dict=filter_dict,
+                                date > startdate & date < enddate;
+                                limit=arg_dict.get('limit',20),
+                                offset=arg_dict.get('offset',0),
+                                orderby_dict = {
+                                    'even_id': 'asc',
+                                    'id': 'asc'
+                                
+                                }
+                                )
+
+        evidence = result[0] if len(result)>0 else {}
+
+        evidences = {'evidences': result}
+
+        return jsonify(evidence, evidences) , 200
+
+     
 @app.route('/insertEvidence', methods=['POST'])
 def insert_evidence():
     arg_dict = {x[0]: x[1][0] for x in list(request.args.lists())}
@@ -468,6 +529,8 @@ def insert_evidence():
 
     # If event id needs to be updated, then create new event or reuse previously created event
     if len(matched_event) > 0:
+
+
         evidence_data['even_id'] = matched_event[0]['even_id']
     else:
         new_event_uuid = create_event(type=event_data['type'],

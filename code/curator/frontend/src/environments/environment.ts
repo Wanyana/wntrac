@@ -4,5 +4,7 @@
 
 export const environment = {
   production: false,
-  dataUrl: 'http://localhost/'
+  dataUrl: 'https://wntrac-curation-dev.mybluemix.net/'
+  //dataUrl: 'http://localhost/'
+  
 };
